@@ -1,0 +1,89 @@
+// Renovate runs as the hosted Mend app, so no workflow or token in this
+// repository is involved. It updates the SHA-pinned actions together with
+// their version comments, keeps the lock files fresh, and opens the PRs in the
+// early morning.
+//
+// Merging is left to GitHub's native auto-merge, which Renovate enables on its
+// PRs, so an update that breaks a required status check stays open instead of
+// merging. The merge happens on behalf of the Renovate app, whose pushes do
+// trigger other workflows, so merged updates still run the deployment. The
+// "require branches to be up to date before merging" rule would block those
+// merges forever, so rebaseWhen below lets Renovate bring a branch that fell
+// behind main back up to date.
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  // pinGitHubActionDigests opens a PR for any action that is referenced by tag
+  // instead of by SHA. configMigration opens a PR when an option used here is
+  // renamed or deprecated.
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":configMigration"
+  ],
+  "timezone": "Europe/Berlin",
+  // Daily, so a failing batch stays small enough to attribute. The early window
+  // keeps the merges, and with them the deployment, out of working hours.
+  "schedule": ["before 6am"],
+  "automerge": true,
+  // Rebase a branch that is behind main once it is otherwise ready to merge,
+  // instead of on every push to main. A PR whose checks fail is left alone
+  // until the failure is dealt with. The default would only rebase on a real
+  // conflict, which leaves a merely outdated branch stuck.
+  "rebaseWhen": "automerging",
+  // Never merge a release on the day it appears, so a compromised package has
+  // a chance to be caught before it lands here.
+  "minimumReleaseAge": "3 days",
+  // Refreshes flake.lock and the transitive part of Cargo.lock, neither of
+  // which the rules below touch. Weekly, as a daily refresh would open a PR
+  // even when nothing was released. The schedule is repeated here to override
+  // the default of Monday.
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on friday"]
+  },
+  "packageRules": [
+    // One combined PR per run for all non-major updates, so several patch bumps
+    // cost one CI run. Major updates get separate PRs.
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "non-major dependencies"
+    },
+    // A Rust release usually brings new clippy lints, so keep the toolchain
+    // out of the shared batch to make a resulting failure obvious.
+    {
+      "matchManagers": ["rust-toolchain"],
+      "groupName": null
+    },
+    // Both lock file refreshes share the branch renovate/lock-file-maintenance
+    // by default, which would put them in one PR. Once nixpkgs-unstable moves
+    // past the dioxus-cli and wasm-bindgen-cli versions pinned in Cargo.toml,
+    // the flake half fails CI and stays open, which is the signal to bump the
+    // pins by hand. A group name per manager gives each its own branch, so the
+    // crate refresh is not stuck behind that.
+    {
+      "matchManagers": ["nix"],
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "groupName": "flake.lock"
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "groupName": "Cargo.lock"
+    },
+    // Only refresh Cargo.lock within the ranges Cargo.toml allows. This keeps
+    // Renovate away from the exact pins on dioxus and wasm-bindgen, which
+    // must match the CLI versions provided by nixpkgs (see Cargo.toml) and
+    // are bumped together with the flake instead.
+    {
+      "matchManagers": ["cargo"],
+      "rangeStrategy": "in-range-only"
+    },
+    // The nix manager is off by default. Without it flake.lock never moves,
+    // which also caps the Rust version in rust-toolchain.toml at what the
+    // pinned rust-overlay knows.
+    {
+      "matchManagers": ["nix"],
+      "enabled": true
+    }
+  ]
+}

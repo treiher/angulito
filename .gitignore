@@ -1,0 +1,7 @@
+/target
+/dist
+/test-results
+/.direnv
+__pycache__/
+.pytest_cache/
+.claude/

@@ -1,0 +1,428 @@
+:root {
+    color-scheme: dark;
+    --bg: #15171c;
+    --panel: #1e2128;
+    --text: #e8eaef;
+    --muted: #9aa1ad;
+    /* UI accent for buttons and selection. Same hue family as the overlay
+       cyan, but dark enough for white text to meet contrast requirements. */
+    --accent: #0e7490;
+    --on-accent: #ffffff;
+    /* Color of the measurement overlay, meaning its lines, wedge, dots and
+       label. Cyan is far from skin and clothing tones and colorblind-safe.
+       The PNG export draws the same overlay onto a canvas, so keep this in
+       sync with OVERLAY_RGB in src/components/angle_editor.rs, which is
+       rgb(0, 200, 230). */
+    --overlay: #00c8e6;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+}
+
+header {
+    padding: 1.5rem 1rem 0.5rem;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+header p {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+}
+
+/* The Dioxus mount point. It fills the viewport so the footer can be pushed
+   to the bottom even when the content is short. */
+#main {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+    padding: 0.5rem 1rem 1rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+footer a {
+    color: var(--muted);
+}
+
+main {
+    /* As a flex item, auto side margins disable stretching, so the full
+       width up to the cap has to be requested explicitly. */
+    width: 100%;
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Centered under the centered header; on the empty start screen the button
+   is the only element on the page. */
+.file-loader {
+    text-align: center;
+}
+
+/* Hidden but still focusable, so the styled label acts as the button while
+   the input stays in the tab order. `display: none` would take it out and
+   leave no way to open the file picker with the keyboard. */
+.file-loader input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* The input is invisible, so its focus ring has to appear on the label. */
+.file-loader input[type="file"]:focus-visible + .file-button {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.file-button,
+button.primary {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.frame-selector {
+    position: relative;
+    background: var(--panel);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.frame-selector video {
+    width: 100%;
+    max-height: 50vh;
+    border-radius: 0.5rem;
+}
+
+.frame-strip {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.25rem 0;
+}
+
+.frame-strip .thumb {
+    position: relative;
+    flex: none;
+    border-radius: 0.4rem;
+    border: 2px solid transparent;
+}
+
+.thumb-select {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.frame-strip .thumb img {
+    display: block;
+    height: 4.5rem;
+    border-radius: 0.3rem;
+}
+
+.frame-strip .thumb.selected {
+    border-color: var(--accent);
+}
+
+.thumb-delete,
+.video-close {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.status-error {
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 59, 48, 0.15);
+    color: #ffb4ae;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.status-dismiss {
+    flex: none;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.angle-editor {
+    background: var(--panel);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.editor-viewport {
+    position: relative;
+    align-self: center;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    /* Suppress the long-press callout over the image on iOS Safari. */
+    -webkit-touch-callout: none;
+}
+
+.editor-stage {
+    position: relative;
+    transform-origin: 0 0;
+}
+
+.editor-stage img {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+}
+
+#overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Stroke widths, radii, and font sizes of the overlay are set as attributes
+   in the component, scaled by 1/zoom to keep a constant on-screen size. */
+.angle-line {
+    stroke: var(--overlay);
+}
+
+/* Keep in sync with LINE_CASING_COLOR in src/components/angle_editor.rs,
+   which is rgba(0, 0, 0, 0.55). */
+.angle-line-casing {
+    stroke: rgba(0, 0, 0, 0.55);
+}
+
+/* Keep the mix percentage in sync with WEDGE_OPACITY in
+   src/components/angle_editor.rs, which is 0.3. */
+.angle-wedge {
+    fill: color-mix(in srgb, var(--overlay) 30%, transparent);
+}
+
+/* The dot marks the measured point and is also drawn in the exported image.
+   The ring is the grab affordance and exists only on screen. Keep the stroke
+   in sync with DOT_CASING_COLOR in src/components/angle_editor.rs, which is
+   #ffffff. */
+.handle-dot {
+    fill: var(--overlay);
+    stroke: #ffffff;
+}
+
+.handle-ring {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.75);
+}
+
+.handle-ring.vertex {
+    stroke: color-mix(in srgb, var(--overlay) 85%, transparent);
+}
+
+.handle-group:hover .handle-ring,
+.handle-group:focus-within .handle-ring,
+.handle-group.dragging .handle-ring {
+    stroke: #ffffff;
+}
+
+.handle-group:hover .handle-ring.vertex,
+.handle-group:focus-within .handle-ring.vertex,
+.handle-group.dragging .handle-ring.vertex {
+    stroke: var(--overlay);
+}
+
+.handle-hit {
+    fill: transparent;
+    cursor: grab;
+}
+
+/* Keyboard focus is indicated by the highlighted ring (above) instead of
+   the browser's default outline rectangle. */
+.handle-hit:focus {
+    outline: none;
+}
+
+.handle-group.dragging .handle-hit {
+    cursor: grabbing;
+}
+
+.loupe {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    background: #000;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.loupe img {
+    position: absolute;
+    max-width: none;
+}
+
+.loupe-mark {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Keep the stroke in sync with LABEL_HALO_COLOR in
+   src/components/angle_editor.rs, which is rgba(0, 0, 0, 0.6). */
+.angle-label {
+    fill: var(--overlay);
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: rgba(0, 0, 0, 0.6);
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Mirrors the editor toolbar, with the seek controls centered like the zoom
+   controls and the primary action on the right. The grid centers the seek
+   group even though there is no left-hand item to balance the row. */
+.video-controls {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.seek-controls {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.video-controls > .primary {
+    grid-column: 3;
+    justify-self: end;
+}
+
+/* Too narrow for three columns: stack and wrap instead. */
+@media (max-width: 560px) {
+    .video-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+.seek-controls button,
+.zoom-controls button {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #3a3f4a;
+    border-radius: 0.4rem;
+    background: #262a33;
+    color: var(--text);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.seek-controls button:hover,
+.zoom-controls button:hover {
+    background: #2e333e;
+}
+
+.video-time {
+    min-width: 4.5rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.zoom-controls button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.zoom-level {
+    min-width: 3.2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+.angle-readout {
+    font-size: 1.2rem;
+    font-weight: 600;
+}

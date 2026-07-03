@@ -1,0 +1,50 @@
+[package]
+name = "angulito"
+version = "0.1.0"
+edition = "2024"
+description = "Measure angles in images and video frames in the browser"
+license = "AGPL-3.0-only"
+repository = "https://github.com/treiher/angulito"
+# A web app, not a library: nothing here belongs on crates.io.
+publish = false
+
+[dependencies]
+# dioxus and wasm-bindgen are pinned to the dioxus-cli and wasm-bindgen-cli
+# versions provided by nixpkgs (see flake.nix).
+dioxus = { version = "=0.7.9", features = ["web"] }
+js-sys = "0.3"
+wasm-bindgen = "=0.2.121"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "Blob",
+    "CanvasRenderingContext2d",
+    "Document",
+    "DomRect",
+    "Element",
+    "EventTarget",
+    "PointerEvent",
+    "File",
+    "FileList",
+    "HtmlAnchorElement",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "HtmlImageElement",
+    "HtmlInputElement",
+    "HtmlMediaElement",
+    "HtmlVideoElement",
+    "MouseEvent",
+    "SvgElement",
+    "Url",
+    "WheelEvent",
+    "Window",
+] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+# One codegen unit trades a little build parallelism for a smaller module,
+# worth a few percent off the wasm both raw and gzipped when last measured.
+# A full release build of this crate is fast enough that the lost parallelism
+# does not matter.
+codegen-units = 1
+

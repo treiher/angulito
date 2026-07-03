@@ -1,0 +1,75 @@
+name: Deploy
+
+# Builds the site and publishes it to GitHub Pages. The Pages source has to be
+# set to GitHub Actions in the repository settings, or the deploy job fails.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The build job runs plenty of third-party code, meaning the toolchain, the
+# crates and the pytest plugins. Restrict it to reading the repository and
+# grant the deployment permissions only to the deploy job.
+permissions:
+  contents: read
+
+# Cancelling a running deployment can leave the published site half updated,
+# so pushes to main queue up behind each other instead of preempting.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Keep the token out of .git/config, where every later step and all
+          # the third-party code they run could read it.
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@2126ae7fc54c9df00dd18f7f18754393182c73cd # v31.9.1
+
+      # Caches the Cargo registry and the dependency artifacts, keyed on the
+      # Rust version and the manifests. The toolchain only exists inside the
+      # dev shell, so rustc and cargo are invoked through it. The shared key
+      # puts both workflows on one cache instead of one cache per job.
+      - name: Cache the Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: "nix develop -c {0}"
+          shared-key: rust
+
+      - name: Run checks
+        run: nix develop -c make check
+
+      - name: Run tests
+        # The end-to-end tests build the release bundle and run against it as
+        # served over HTTP, and that same bundle is uploaded below, so what
+        # gets deployed is exactly what was tested.
+        run: nix develop -c make test
+
+      - name: Upload the bundle as a Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: target/dx/angulito/release/web/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the uploaded artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

@@ -1,0 +1,8 @@
+[application]
+name = "angulito"
+
+[web.app]
+title = "Angulito"
+# Served under https://<user>.github.io/angulito/ on GitHub Pages. Note that
+# `dx serve` also serves under /angulito/ because of this.
+base_path = "angulito"

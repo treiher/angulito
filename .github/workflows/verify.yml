@@ -1,0 +1,47 @@
+name: Verify
+
+# Runs the checks and tests on every pull request. The "test" job is a required
+# status check on main, so renaming it drops that gate until the branch
+# protection rule is updated to match.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Only the newest push to a pull request is worth checking.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Keep the token out of .git/config, where every later step and all
+          # the third-party code they run could read it.
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@2126ae7fc54c9df00dd18f7f18754393182c73cd # v31.9.1
+
+      # Caches the Cargo registry and the dependency artifacts, keyed on the
+      # Rust version and the manifests. The toolchain only exists inside the
+      # dev shell, so rustc and cargo are invoked through it. The shared key
+      # puts both workflows on one cache instead of one cache per job.
+      - name: Cache the Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: "nix develop -c {0}"
+          shared-key: rust
+
+      - name: Run checks
+        run: nix develop -c make check
+
+      - name: Run tests
+        run: nix develop -c make test

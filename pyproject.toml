@@ -1,0 +1,18 @@
+[tool.ruff.lint]
+extend-select = [
+  "B",   # bugbear
+  "I",   # import sorting
+  "PT",  # pytest style
+  "RUF",
+  "SIM", # simplifications
+  "UP",  # modern syntax
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/e2e"]
+# The chromium_headless_shell shipped by nixpkgs' playwright-driver computes
+# element visibility incorrectly, so to_be_visible always fails. The option
+# --browser-channel chromium selects the full browser binary in new-headless
+# mode instead.
+addopts = "--browser-channel chromium"
+base_url = "http://localhost:8311"

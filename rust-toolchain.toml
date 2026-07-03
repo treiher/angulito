@@ -1,0 +1,8 @@
+[toolchain]
+channel = "1.95"
+# clippy and rustfmt are what `make check` runs. rust-analyzer and rust-src
+# are for editors. The default profile would also pull in rust-docs, several
+# hundred megabytes that nothing reads out of the dev shell.
+components = ["clippy", "rustfmt", "rust-analyzer", "rust-src"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

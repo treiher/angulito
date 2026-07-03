@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Left empty on purpose: dx fills this in from `title` under
+             [web.app] in Dioxus.toml. It only ever fills an element that
+             already exists, and it appends rather than replaces, so writing
+             the title here would produce "AngulitoAngulito". -->
+        <title></title>
+        <meta name="description" content="Measure angles in images and video frames, entirely in your browser. Nothing is uploaded.">
+        <!-- Everything the app needs is same-origin, plus the blob: URLs it
+             creates itself for frames, captures and exports. 'wasm-unsafe-eval'
+             is what instantiating the WebAssembly module needs, and connect-src
+             covers the fetch of the .wasm file. The inline style attributes on
+             the overlay and the loupe need style-src-attr.
+
+             There is no frame-ancestors directive. It is ignored in a meta
+             element, and GitHub Pages cannot set response headers, so
+             clickjacking protection is not available here. -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' blob:; media-src blob:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Angulito">
+        <meta property="og:description" content="Measure angles in images and video frames, entirely in your browser. Nothing is uploaded.">
+        <meta property="og:url" content="https://treiher.github.io/angulito/">
+        <!-- Served from the repository rather than the bundle: docs/ is not
+             part of the deployed output, and a file in assets/ is only copied
+             there if some `asset!()` refers to it. -->
+        <meta property="og:image" content="https://raw.githubusercontent.com/treiher/angulito/main/docs/screenshot.jpg">
+    </head>
+    <body>
+        <div id="main"></div>
+    </body>
+</html>
