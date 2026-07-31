@@ -2,12 +2,11 @@
 // repository is involved. It updates the SHA-pinned actions together with
 // their version comments and keeps the lock files fresh.
 //
-// Merging is left to GitHub's native auto-merge, which Renovate enables on its
-// PRs, so an update that breaks a required status check stays open instead of
-// merging. The merge happens on behalf of the Renovate app, whose pushes do
-// trigger other workflows, so merged updates still run the deployment. Apart
-// from the lock file refresh below, nothing is scheduled, so an update and the
-// deployment it triggers can land at any time of day.
+// Renovate merges its own PRs, so an update that breaks any check stays open
+// instead of merging. The merge happens on behalf of the Renovate app, whose
+// pushes do trigger other workflows, so merged updates still run the
+// deployment. Apart from the lock file refresh below, nothing is scheduled, so
+// an update and the deployment it triggers can land at any time of day.
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   // pinGitHubActionDigests opens a PR for any action that is referenced by tag
@@ -20,6 +19,13 @@
   ],
   "timezone": "Europe/Berlin",
   "automerge": true,
+  // GitHub's native auto-merge waits only for the checks the ruleset requires
+  // and ignores everything else, which lets a PR merge while the
+  // renovate/artifacts status reports that a lock file could not be
+  // regenerated. Merging through Renovate instead waits for the whole branch
+  // status to be green, at the cost of merging on the next run rather than
+  // right after the checks pass.
+  "platformAutomerge": false,
   // Rebase a branch as soon as it is behind main, so that the "require
   // branches to be up to date before merging" rule cannot leave an outdated
   // branch stuck.
