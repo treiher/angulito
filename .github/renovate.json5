@@ -18,6 +18,10 @@
     ":configMigration"
   ],
   "timezone": "Europe/Berlin",
+  // Enable the nix manager, which is off by default, to cover flake.nix.
+  "nix": {
+    "enabled": true
+  },
   "automerge": true,
   // GitHub's native auto-merge waits only for the checks the ruleset requires
   // and ignores everything else, which lets a PR merge while the
@@ -80,13 +84,6 @@
     {
       "matchManagers": ["cargo"],
       "rangeStrategy": "in-range-only"
-    },
-    // The nix manager is off by default. Without it flake.lock never moves,
-    // which also caps the Rust version in rust-toolchain.toml at what the
-    // pinned rust-overlay knows.
-    {
-      "matchManagers": ["nix"],
-      "enabled": true
     }
   ]
 }
