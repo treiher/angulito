@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.95"
+channel = "1.97"
 # clippy and rustfmt are what `make check` runs. rust-analyzer and rust-src
 # are for editors. The default profile would also pull in rust-docs, several
 # hundred megabytes that nothing reads out of the dev shell.
