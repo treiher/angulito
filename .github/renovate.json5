@@ -77,6 +77,20 @@
       "matchUpdateTypes": ["lockFileMaintenance"],
       "groupName": "Cargo.lock"
     },
+    // The wasm-bindgen crates pin each other to an exact version, and Renovate
+    // regenerates Cargo.lock with one cargo update call per crate, so none of
+    // them can ever be raised on its own. The weekly Cargo.lock refresh
+    // resolves the whole graph in one call and covers them instead.
+    {
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "js-sys",
+        "wasm-bindgen",
+        "wasm-bindgen-futures",
+        "web-sys"
+      ],
+      "enabled": false
+    },
     // Only refresh Cargo.lock within the ranges Cargo.toml allows. This keeps
     // Renovate away from the exact pins on dioxus and wasm-bindgen, which
     // must match the CLI versions provided by nixpkgs (see Cargo.toml) and
