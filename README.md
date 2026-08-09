@@ -26,7 +26,7 @@ Enter the shell with `nix develop`, or run `direnv allow` once to have it loaded
 ```sh
 dx serve          # development server with hot reload (under /angulito/)
 make build        # release bundle in target/dx/angulito/release/web/public
-make check        # formatting, clippy, ruff, ty
+make check        # version pins, formatting, clippy, ruff, ty
 make test         # unit tests + end-to-end tests
 make all          # check + test
 make format       # apply formatting and lint fixes
@@ -44,7 +44,7 @@ The bundle produced by `make build` can be served by any static file server.
 
 The flake provides a shell on Linux and macOS, but only `x86_64-linux` is covered by CI. The end-to-end tests have only been run on Linux.
 
-Dependency updates are opened daily by Renovate and auto-merged once the checks pass (`.github/renovate.json5`). One thing is outside that and is bumped by hand: the `dioxus` and `wasm-bindgen` versions in `Cargo.toml`. They are exact pins that must match the CLI versions shipped by nixpkgs, so they move together with `flake.lock`.
+Dependency updates are opened daily by Renovate and auto-merged once the checks pass (`.github/renovate.json5`). One thing is outside that and is bumped by hand: the `dioxus` and `wasm-bindgen` versions in `Cargo.toml`. They are exact pins that must match the CLI versions shipped by nixpkgs, so they move together with `flake.lock`. A lock file refresh that outgrows the pins fails on `make check`, which compares the pins against the CLIs and names the crate that drifted.
 
 Auto-merge relies on two branch protection settings on `main` that cannot be configured from the repository files: the `test` job has to be a required status check, and "Require branches to be up to date before merging" has to be enabled. Renovate rebases a pull request that fell behind `main` once it is otherwise ready to merge, so the up-to-date rule does not leave it stuck.
 
