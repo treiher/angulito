@@ -67,6 +67,25 @@
       "matchManagers": ["rust-toolchain"],
       "groupName": null
     },
+    // The nixpkgs input names a git ref, which carries no release date, and
+    // Renovate treats a missing date as unmet. The channel bump then never
+    // reaches a branch and stays on the dependency dashboard instead.
+    // Dropping the age gate for this input lets it through, major bumps
+    // included. The rule is limited to nixpkgs, the only input on a versioned
+    // channel branch. The rolling nixpkgs-unstable input and the unpinned
+    // rust-overlay input carry no version to move to and are refreshed by the
+    // weekly lock file maintenance instead.
+    //
+    // A channel bump swaps the whole toolchain, so keep it out of the shared
+    // batch to make a resulting failure obvious. This only matters for a bump
+    // within the same year, as a bump to the next year counts as major and
+    // gets its own PR anyway.
+    {
+      "matchManagers": ["nix"],
+      "matchDepNames": ["nixpkgs"],
+      "minimumReleaseAge": null,
+      "groupName": null
+    },
     // Both lock file refreshes share the branch renovate/lock-file-maintenance
     // by default, which would put them in one PR. Once nixpkgs-unstable moves
     // past the dioxus-cli and wasm-bindgen-cli versions pinned in Cargo.toml,
