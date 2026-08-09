@@ -38,7 +38,8 @@
   // rest back. The grouping below keeps the number per run small.
   "prHourlyLimit": 0,
   // Never merge a release on the day it appears, so a compromised package has
-  // a chance to be caught before it lands here.
+  // a chance to be caught before it lands here. The lock file refresh below is
+  // exempt, so a transitive dependency can still arrive on its release day.
   "minimumReleaseAge": "3 days",
   // Refreshes flake.lock and the transitive part of Cargo.lock, neither of
   // which the rules below touch. Weekly, as a daily refresh would open a PR
@@ -46,7 +47,12 @@
   // hosted app does not guarantee a run inside a narrower one.
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["* * * * 5"]
+    "schedule": ["* * * * 5"],
+    // A lock file refresh carries no release date, as the package manager
+    // resolves the versions. Renovate treats a missing date as unmet and keeps
+    // the renovate/stability-days check pending forever, which blocks its own
+    // automerge, so minimumReleaseAge cannot be used here.
+    "minimumReleaseAge": null
   },
   "packageRules": [
     // One combined PR per run for all non-major updates, so several patch bumps
