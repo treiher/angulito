@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     # Used for dioxus-cli and wasm-bindgen-cli, which must match the dioxus
     # and wasm-bindgen versions pinned in Cargo.toml.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
