@@ -42,20 +42,29 @@
   // exempt, so a transitive dependency can still arrive on its release day.
   "minimumReleaseAge": "3 days",
   // Refreshes flake.lock and the transitive part of Cargo.lock, neither of
-  // which the rules below touch. Weekly, as a daily refresh would open a PR
-  // even when nothing was released.
+  // which the rules below touch. Monthly, as the app runs entirely in the
+  // browser with no server, no stored data and a handful of direct
+  // dependencies, so a faster cadence buys little. This refresh is also the
+  // one path here with no quarantine, as minimumReleaseAge cannot apply to
+  // it, and a wider gap between release and adoption is worth more than
+  // fresher transitive versions.
   //
   // Renovate opens a refresh whenever the branch is missing and the schedule
   // is open, so a merge inside the creation window is followed by another PR
-  // for the same lock file. Friday is split to prevent that: a morning run
+  // for the same lock file. The day is split to prevent that: a morning run
   // opens the PR, an afternoon run merges it, and creation is closed by then.
   // Each half spans twelve hours, as the hosted app does not guarantee a run
-  // inside a narrower window. A refresh that is not green before the last
-  // afternoon run stays open and is rebased on the next Friday morning.
+  // inside a narrower window.
+  //
+  // Written as text rather than cron, as cron combines day of month and day
+  // of week with OR, which leaves a single weekday of a single week
+  // unreachable. A refresh that is not green before the last afternoon run
+  // stays open and is rebased a month later, as rebaseWhen only acts while
+  // the window is open.
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["* 0-11 * * 5"],
-    "automergeSchedule": ["* 12-23 * * 5"],
+    "schedule": ["before 12:00 on the 1st day instance on friday"],
+    "automergeSchedule": ["after 12:00 on the 1st day instance on friday"],
     // A lock file refresh carries no release date, as the package manager
     // resolves the versions. Renovate treats a missing date as unmet and keeps
     // the renovate/stability-days check pending forever, which blocks its own
@@ -82,7 +91,7 @@
     // included. The rule is limited to nixpkgs, the only input on a versioned
     // channel branch. The rolling nixpkgs-unstable input and the unpinned
     // rust-overlay input carry no version to move to and are refreshed by the
-    // weekly lock file maintenance instead.
+    // monthly lock file maintenance instead.
     //
     // A channel bump swaps the whole toolchain, so keep it out of the shared
     // batch to make a resulting failure obvious. This only matters for a bump
@@ -112,7 +121,7 @@
     },
     // The wasm-bindgen crates pin each other to an exact version, and Renovate
     // regenerates Cargo.lock with one cargo update call per crate, so none of
-    // them can ever be raised on its own. The weekly Cargo.lock refresh
+    // them can ever be raised on its own. The monthly Cargo.lock refresh
     // resolves the whole graph in one call and covers them instead.
     {
       "matchManagers": ["cargo"],
