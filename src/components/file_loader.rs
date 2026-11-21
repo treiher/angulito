@@ -26,8 +26,7 @@ pub fn FileLoader(
         };
         let files: Vec<web_sys::File> = input
             .files()
-            .map(|files| (0..files.length()).filter_map(|i| files.get(i)).collect())
-            .unwrap_or_default();
+            .map_or_default(|files| (0..files.length()).filter_map(|i| files.get(i)).collect());
         // Allow selecting the same files again later.
         input.set_value("");
         if files.is_empty() {
